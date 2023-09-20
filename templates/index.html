@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Streaming Demonstration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+
+  <body>
+    <h1>Video Streaming Demonstration</h1>
+    <div class="container">
+      <h2>Pi camera 1080p</h2>
+      <img src="{{ url_for('video_feed') }}" alt="pi 1080">
+
+      <h2>Pi camera 480p</h2>
+      <img src="{{ url_for('preview') }}" alt="pi 480">
+
+      <h2>Web cam 720p</h2>
+      <img src="{{ url_for('preview_webcam') }}" alt="web cam 720">
+    </div>
+  </body>
+</html>
+
+<!-- <html>
+  <head>
+    <title>Video Streaming Demonstration</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+  </head>
+  <body>
+    <h1>Video Streaming Demonstration</h1>
+    <img id="videoStream" src="{{ url_for('video_feed') }}" alt="Video Stream">
+    
+    Buttons to control the video stream -->
+    <!-- <button onclick="pauseVideo()">Pause</button>
+    <button onclick="playVideo()">Play</button>
+
+    Paragraph to display the timestamp -->
+    <!-- <p id="timestamp">Timestamp will appear here.</p>
+
+    <script type="text/javascript">
+        // Connect to the WebSocket
+        var socket = io.connect('http://128.195.169.232:5000');
+        
+        // Listen for 'new_timestamp' event from the server
+        socket.on('new_timestamp', function(data) {
+            // Update the content of the paragraph with the new timestamp
+            document.getElementById('timestamp').textContent = "Timestamp: " + data.timestamp;
+        });
+
+        function pauseVideo() {
+            document.getElementById('videoStream').src = "";
+        }
+
+        function playVideo() {
+            document.getElementById('videoStream').src = "{{ url_for('video_feed') }}";
+        }
+    </script>
+
+  </body>
+</html> -->
