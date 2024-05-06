@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, jsonify
 from camera_manager import CameraManager
 
 app = Flask(__name__)
@@ -94,22 +94,28 @@ def preview_webcam():
 @app.route('/start')
 def start():
     """Route to start the camera."""
+    if camera_pi.picam2_running:
+        return jsonify({"message": "Camera already running"})
     camera_pi.setup_camera()
-    return "Camera started"
+    return jsonify({"message": "Camera started"})
 
 
 @app.route('/stop')
 def stop():
     """Route to stop the camera."""
+    if not camera_pi.picam2_running:
+        return jsonify({"message": "Camera already stopped"})
     camera_pi.stop()
-    return "Camera stopped"
+    return jsonify({"message": "Camera stopped"})
 
 
 @app.route('/reboot')
 def reboot():
     """Route to reboot the camera."""
+    if camera_pi.picam2_rebooting:
+        return jsonify({"message": "Camera is currently rebooting"})
     camera_pi.reboot()
-    return "Camera rebooted"
+    return jsonify({"message": "Camera rebooted"})
 
 
 if __name__ == '__main__':

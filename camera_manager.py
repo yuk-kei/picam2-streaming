@@ -5,7 +5,9 @@ from picamera2.encoders import MJPEGEncoder
 from picamera2.outputs import FileOutput
 import cv2
 import time
+import logging
 
+logging.basicConfig(level=logging.DEBUG)
 
 # Enable the following if you want to use Kafka
 # from producer_config import config, delivery_report
@@ -97,6 +99,10 @@ class CameraManager:
 
         self.pi_source = pi_source if pi_source else 0
         self.web_source = web_source if web_source else 1
+        
+        self.picam2_running = False
+        self.webcam_running = False
+        self.picam2_rebooting = False
 
     def setup_camera(self, resolution=(640, 360)):
         """
@@ -107,7 +113,7 @@ class CameraManager:
         Args:
         - resolution: Tuple representing the resolution for the camera.
         """
-        if not self.picam2:
+        if not self.picam2_running:
             self.picam2 = Picamera2(0)
             config = self.picam2.create_video_configuration(main={"size": (1920, 1080), "format": "RGB888"},
                                                             lores={"size": resolution, "format": "YUV420"},
@@ -118,30 +124,61 @@ class CameraManager:
             self.picam2.start_recording(MJPEGEncoder(), FileOutput(self.output_low), name="lores")
             self.picam2.pre_callback = self.apply_timestamp
             self.picam2.set_controls({"FrameDurationLimits": (33333, 33333)})
+            self.picam2_running =True
+
 
     def setup_webcam(self):
         """Setup and start the webcam."""
-        if not self.webcam:
+        if self.enable_webcam and not self.webcam:
             self.webcam = Picamera2(1)
             # config = self.webcam.create_video_configuration(main={"size": resolution, "format": "MJPEG"})
             config = self.webcam.create_video_configuration(main={"size": (1080, 720), "format": "MJPEG"})
             self.webcam.configure(config)
             self.webcam.start()
+            self.webcam_running = True
 
     def stop(self):
         """Stop recording and close both PiCamera and webcam."""
-        if self.picam2:
-            self.picam2.stop_recording()
-            self.picam2.close()
-            self.webcam.stop_recording()
-            self.webcam.close()
+        logging.debug("Stopping cameras.")
+        if self.picam2 and self.picam2_running:
+            try:
+                self.picam2.stop_recording()
+                self.picam2.close()
+                self.picam2_running = False
+                logging.debug("PiCamera stopped and closed.")
+            except Exception as e:
+                logging.error(f"Failed to stop PiCamera: {e}")
+        if self.enable_webcam and self.webcam and self.webcam_running:
+            try:
+                self.webcam.stop_recording()
+                self.webcam.close()
+                self.webcam_running = False
+                logging.debug("Webcam stopped and closed.")
+            except Exception as e:
+                logging.error(f"Failed to stop webcam: {e}")
+
 
     def reboot(self):
         """Reboot the PiCamera and webcam."""
-        self.stop()
-        self.setup_camera()
-        self.setup_webcam()
-
+        logging.debug("Rebooting cameras.")
+        if self.picam2_running:
+            self.stop()
+        self.picam2_running = False
+        self.picam2_rebooting = True
+        time.sleep(1)
+        try:
+            self.setup_camera()
+            logging.debug("PiCamera setup completed or not being used.")
+        except Exception as e:
+            logging.error(f"Error setting up PiCamera: {e}")
+        
+        try:
+            self.setup_webcam()
+            logging.debug("Webcam setup completed.")
+        except Exception as e:
+            logging.error(f"Error setting up webcam: {e}")
+        self.picam2_rebooting = False
+        
     def preview(self):
         """Preview the PiCamera. using the lores stream."""
         with self.output_low.condition:
