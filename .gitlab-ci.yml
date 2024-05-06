@@ -63,7 +63,7 @@ deploy5:
     - apk add --no-cache sshpass
     - apk add --no-cache openssh-client
 
-    - sshpass -p $PICAM51_PW scp -o StrictHostKeyChecking=no -r ./* $PICAM5_IP:$DEPLOY_PATH
+    - sshpass -p $PICAM5_PW scp -o StrictHostKeyChecking=no -r ./* $PICAM5_IP:$DEPLOY_PATH
     - sshpass -p $PICAM5_PW ssh -o StrictHostKeyChecking=no $PICAM5_IP "sudo systemctl restart picam2-streaming.service"
 
   only:
